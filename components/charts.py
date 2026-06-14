@@ -180,9 +180,7 @@ def chart_instructor_grade(master: pd.DataFrame) -> go.Figure:
     )
     return fig
 
-# =====================================================
-# Q4 — Avg Grade by Attendance Band
-# =====================================================
+
 def chart_q4_attendance_band(master: pd.DataFrame) -> go.Figure:
     df = add_attendance_band(master)
     agg = (
