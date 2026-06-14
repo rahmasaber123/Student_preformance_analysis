@@ -225,6 +225,21 @@ section[data-testid="stSidebar"] .stButton button:hover {
   position: relative;
   overflow: hidden;
 }
+
+.kf-hero-badge {
+  display: inline-block;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  color: #FBBF24 !important;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1.5px solid rgba(251, 191, 36, 0.5);
+  padding: 8px 20px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+}
 .kf-hero::before {
   /* subtle decorative dot grid */
   content: "";
