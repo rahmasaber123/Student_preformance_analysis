@@ -419,21 +419,21 @@ def chart_risk_donut(pct_at_risk: float) -> go.Figure:
     )
     return fig
 
-
 # =====================================================
-# Performance deep-dive — Hossam Refaat pie (Q3 branch)
+# Performance deep-dive — Hossam Refaat grade by course
 # =====================================================
 def chart_hossam_pie(master: pd.DataFrame,
                      instructor_name: str = "Eng. Hossam Refaat") -> go.Figure:
-    """Course mix for a single instructor with avg-grade overlay.
+    """Average grade per course for a single instructor.
 
-    Mirrors the notebook's Q3 deep-dive chart for Eng. Hossam Refaat —
-    shows how his student population is split across courses and how their
-    average grade differs course-by-course.
+    Shows the same data the notebook's Q3 deep-dive surfaces, but as a
+    horizontal bar so the grade contrast — not the student split — is
+    the visible story. (Function name kept for compatibility with the
+    Performance page imports.)
     """
     fig = go.Figure()
     if master is None or master.empty or "instructor" not in master.columns:
-        style_fig(fig, f"{instructor_name} — Course Mix")
+        style_fig(fig, f"{instructor_name} — Grade by Course")
         fig.add_annotation(text="No instructor data available.",
                            xref="paper", yref="paper", x=0.5, y=0.5,
                            showarrow=False, font=dict(color="#64748B"))
@@ -441,7 +441,7 @@ def chart_hossam_pie(master: pd.DataFrame,
 
     sub = master[master["instructor"] == instructor_name]
     if sub.empty or "course_name" not in sub.columns:
-        style_fig(fig, f"{instructor_name} — Course Mix")
+        style_fig(fig, f"{instructor_name} — Grade by Course")
         fig.add_annotation(text=f"No students under {instructor_name}.",
                            xref="paper", yref="paper", x=0.5, y=0.5,
                            showarrow=False, font=dict(color="#64748B"))
@@ -452,24 +452,40 @@ def chart_hossam_pie(master: pd.DataFrame,
            .agg(students=("student_id", "count"),
                 avg_grade=("avg_grade", "mean"))
            .reset_index()
-           .sort_values("students", ascending=False)
+           .sort_values("avg_grade", ascending=True)
     )
-    labels = [f"{r.course_name}<br>avg {r.avg_grade:.1f}" for r in agg.itertuples()]
-    fig = go.Figure(go.Pie(
-        labels=labels,
-        values=agg["students"],
-        hole=0.4,
-        marker=dict(colors=BLUE[:len(agg)]),
-        textinfo="label+percent",
+    platform_avg = float(sub["avg_grade"].mean())
+
+    # Red bar for the underperforming course, navy for the rest
+    colors = [
+        ACCENT_RED if g < 65 else BLUE[1]
+        for g in agg["avg_grade"]
+    ]
+
+    fig.add_trace(go.Bar(
+        y=agg["course_name"],
+        x=agg["avg_grade"],
+        orientation="h",
+        marker_color=colors,
+        text=[f"<b>{g:.1f}</b>  ·  {n} students"
+              for g, n in zip(agg["avg_grade"], agg["students"])],
         textposition="outside",
+        textfont=dict(size=13),
     ))
-    style_fig(fig, f"{instructor_name} — Student Mix by Course")
+    fig.add_vline(
+        x=platform_avg, line_dash="dash", line_color="#64748B",
+        annotation_text=f"His overall avg: {platform_avg:.1f}",
+        annotation_position="top right",
+    )
+    style_fig(fig, f"{instructor_name} — Avg Grade by Course")
     fig.update_layout(
+        xaxis_title="Average Grade",
+        yaxis_title="",
+        xaxis_range=[0, 100],
         showlegend=False,
-        margin=dict(l=20, r=20, t=60, b=40),
+        margin=dict(l=20, r=80, t=60, b=40),
     )
     return fig
-
 
 # =====================================================
 # Concepts deep-dive — Recursion Performance Across Python Groups
