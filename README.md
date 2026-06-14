@@ -1,4 +1,4 @@
-# Kayfa Student Analytics Dashboard
+# Student Analytics Dashboard
 
 A six-page Streamlit application that turns the Kayfa platform's raw multi-source
 student data into an interactive view of platform health, group performance,
