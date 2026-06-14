@@ -6,14 +6,14 @@ from config import BLUE, CHART_BG, ACCENT_RED  # noqa: F401  (re-exported)
 
 
 def style_fig(fig: go.Figure, title: str = "") -> go.Figure:
-    """Apply the notebook's exact styling."""
+    """Apply consistent chart styling. Section headers carry the title now."""
     fig.update_layout(
-        title=dict(text=title, font=dict(size=16, color="#08306b")),
         plot_bgcolor=CHART_BG,
         paper_bgcolor="white",
         font=dict(family="Segoe UI", size=12, color="#333"),
-        margin=dict(l=60, r=30, t=60, b=50),
+        margin=dict(l=60, r=30, t=30, b=50),
         showlegend=True,
+        title=dict(text=""),   # explicit empty — kills "undefined"
     )
     fig.update_xaxes(gridcolor="#e8e8e8")
     fig.update_yaxes(gridcolor="#e8e8e8")
