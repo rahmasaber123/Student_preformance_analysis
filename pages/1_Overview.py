@@ -1,12 +1,4 @@
-"""Overview page — v3.
 
-Keeps the navy hero KPI banner unchanged. Below it: Executive Summary card,
-a two-column layout with Student Risk Distribution (donut) and Platform Health,
-and a closing insight + recommended action block.
-
-Goal of this page: 'How healthy is the platform overall?'
-March 2026 analysis lives exclusively on the Engagement page.
-"""
 import base64
 from pathlib import Path
 import streamlit as st
@@ -73,6 +65,7 @@ st.markdown(
     <div class="kf-hero">
       <div class="kf-hero-top">
         <div>
+        <div class="kf-hero-badge">KAYFA EVALUATION · TASK 2</div>
           <h1 class="kf-hero-title">{title}</h1>
           <div class="kf-hero-sub">{sub}</div>
         </div>
