@@ -1,78 +1,78 @@
-# Kayfa Student Analytics — Dashboard
+# Kayfa Student Analytics Dashboard
 
-Multi-page Streamlit dashboard backed by MongoDB Atlas. Answers all 15 evaluation
-questions; charts and insights are sourced directly from the cleaning + analysis
-notebook.
+A six-page Streamlit application that turns the Kayfa platform's raw multi-source
+student data into an interactive view of platform health, group performance,
+academic outcomes, curriculum weak spots, behavioural drivers, and at-risk
+students. All heavy analytics are precomputed in a Jupyter notebook and pushed
+to **MongoDB Atlas**; the dashboard reads ready-made results from Atlas rather
+than recomputing from raw files on every load.
+
+> **Built by Eng. Rahma Saber** as part of the Kayfa Data Analytics
+> internship — Month 1 Evaluation, Task 2.
+Demo link :https://studentpreformanceanalysis-kayfa-task2.streamlit.app/
+---
+
+## What it does
+
+- Answers all 15 evaluation questions through 25+ Plotly visualizations
+  with Insight + Recommended Action cards under each chart.
+- Provides six global sidebar filters — **Group, Course, Age Band, Gender,
+  Segment, Instructor** — that subset the charts in real time.
+- bcrypt-backed login against an Atlas `users` collection.
+- Custom design system with a navy hero banner, Kayfa branding, and
+  consistent insight/CTA cards throughout.
+
+## Pages
+
+| Page          | What it answers                                    |
+| ------------- | -------------------------------------------------- |
+| 📊 Overview   | How healthy is the platform overall?               |
+| 👥 Groups     | How are the cohorts performing relative to each other? |
+| 📝 Performance| Where do students perform well, where do they lag, and why? |
+| 🎯 Concepts   | Which curriculum concepts are the weak spots?      |
+| 📈 Engagement | How does behavior predict outcome, and what shifted in March 2026? |
+| 🚨 At Risk    | Who needs intervention, and where is risk concentrated? |
+
+## Tech stack
+
+- **Frontend**: Streamlit (multi-page) + custom CSS
+- **Charts**: Plotly
+- **Data store**: MongoDB Atlas (18 precomputed collections)
+- **Auth**: bcrypt
+- **Notebook**: Python · Pandas · NumPy · scikit-learn (K-Means)
+
+## Project structure
 
 ## Quick start (local)
 
 ```bash
-# 1. install
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-# 2. configure Mongo
-cp .env.example .env
-# edit .env → set MONGO_URI to your Atlas connection string
-
-# 3. run
+cp .env.example .env       # paste your MONGO_URI inside
 streamlit run app.py
 ```
 
-Default login (set in the notebook's Atlas seed step):
-
-- **Username:** `Kayfa_HR`
-- **Password:** `kayfa2026@`
+**Default login:** `Kayfa_HR` / `kayfa2026@`
 
 ## Deploy on Streamlit Community Cloud
 
 1. Push this folder to a public GitHub repo.
-2. Connect the repo at https://share.streamlit.io
-3. Main file: `app.py`
-4. Add the secret in **Settings → Secrets**:
-   ```toml
-   MONGO_URI = "mongodb+srv://USER:[email protected]/..."
-   ```
-5. In Atlas, **Network Access** → add `0.0.0.0/0` (Streamlit Cloud has no fixed IPs).
-
-## What's inside
-
+2. Connect at [share.streamlit.io](https://share.streamlit.io) — main file: `app.py`.
+3. **Settings → Secrets**:
+```toml
+   MONGO_URI = "mongodb+srv://USER:PASSWORD@cluster.mongodb.net/..."
 ```
-kayfa_dashboard/
-├── app.py                # entry point + login gate
-├── auth.py               # bcrypt verify against users collection
-├── db.py                 # cached MongoClient
-├── config.py             # palette, paths, constants
-├── assets/
-│   ├── kayfa_logo.png    # logo (top-right of every page)
-│   ├── favicon.ico
-│   └── styles.css        # full UI stylesheet
-├── components/
-│   ├── injector.py       # injects styles.css
-│   ├── sidebar.py        # global filters + logout
-│   ├── cards.py          # KPI tiles, page header
-│   ├── charts.py         # one Plotly function per question
-│   └── observations.py   # Insight + CTA cards
-├── pages/
-│   ├── 1_📊_Overview.py    # KPIs + Q9 cohort trend
-│   ├── 2_👥_Groups.py      # Q1, Q12, Q15, Q13
-│   ├── 3_📝_Performance.py # Q3, Q2, Q4, Q8
-│   ├── 4_🎯_Concepts.py    # Q6, Q7
-│   ├── 5_📈_Engagement.py  # Q5, Q10
-│   └── 6_🚨_At_Risk.py     # Q14, Q11
-└── utils/
-    ├── mongo.py          # generic fetch + cache
-    ├── queries.py        # one function per collection
-    └── helpers.py        # chart styling (matches notebook style_fig)
-```
+4. In Atlas, **Network Access** → add `0.0.0.0/0` (Streamlit Cloud has no fixed IPs).
 
-## Atlas collections consumed (18)
+## Atlas collections consumed
 
-`kpi_overview`, `filter_options`, `users`, `master`, `student_segments`,
-`cluster_profiles`, `at_risk`, `group_attendance`, `group_sizes`, `grade_trends`,
-`group_merge_recommendation`, `monthly_attendance`, `monthly_engagement`,
-`course_stats`, `type_stats`, `late_submission_impact`, `concept_failures`,
-`concept_mastery_timeline`.
+`kpi_overview` · `filter_options` · `users` · `master` · `student_segments` ·
+`cluster_profiles` · `at_risk` · `group_attendance` · `group_sizes` ·
+`grade_trends` · `group_merge_recommendation` · `monthly_attendance` ·
+`monthly_engagement` · `course_stats` · `type_stats` ·
+`late_submission_impact` · `concept_failures` · `concept_mastery_timeline`.
 
-All heavy analytics are precomputed by the notebook and read directly from Atlas —
-the dashboard never re-crunches raw files on load.
+---
+
+**Author:** Eng. Rahma Saber
+Kayfa AI & Data Analytics Internship · Month 1 Evaluation · Data Analytics Track
