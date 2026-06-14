@@ -33,21 +33,36 @@ def chart_q1_attendance(att_grp: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Bar(
         y=df["group_name"], x=df["rate"],
         orientation="h", marker_color=colors,
-        text=df["rate"].apply(lambda x: f"{x}%"),
+        text=df["rate"].apply(lambda x: f"<b>{x}%</b>"),
         textposition="outside",
+        textfont=dict(size=12),
+        showlegend=False,
     ))
+    # legend proxies
+    fig.add_trace(go.Bar(x=[None], y=[None], marker_color=BLUE[0],
+                         name="Below platform average"))
+    fig.add_trace(go.Bar(x=[None], y=[None], marker_color=BLUE[4],
+                         name="At or above average"))
+
     fig.add_vline(
-        x=platform_avg, line_dash="dash", line_color=ACCENT_RED,
-        annotation_text=f"Avg: {platform_avg:.1f}%",
-        annotation_position="top right",
+        x=platform_avg, line_dash="dash", line_color=ACCENT_RED, line_width=2.5,
     )
-    style_fig(fig, "Q1: Attendance Rate by Group")
+    fig.add_annotation(
+        x=platform_avg, y=1.02, xref="x", yref="paper",
+        text=f"<b>Platform Avg: {platform_avg:.1f}%</b>",
+        showarrow=False, xanchor="center",
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
+    )
+    style_fig(fig, "")
     fig.update_layout(
         yaxis_title="", xaxis_title="Attendance Rate (%)",
-        xaxis_range=[20, 105], showlegend=False,
+        xaxis_range=[20, 108],
+        legend=dict(orientation="h", yanchor="bottom", y=-0.20,
+                    xanchor="center", x=0.5),
     )
     return fig
-
 
 # =====================================================
 # Q2 — Score Distribution by Assessment Type
@@ -60,26 +75,29 @@ def chart_q2_type_stats(type_stats: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Bar(
         y=df["type"], x=df["avg_score"],
         orientation="h", marker_color=BLUE[2],
-        name="Avg Score",
-        text=df["avg_score"].round(1),
-        textposition="outside",
-        error_x=dict(
-            type="data",
-            array=df["std"].round(1),
-            color=BLUE[0],
-        ),
+        text=[f"<b>{v:.1f}</b>" for v in df["avg_score"]],
+        textposition="inside",
+        insidetextanchor="end",
+        textfont=dict(color="white", size=14),
+        showlegend=False,
     ))
-    fig.add_vline(
-        x=overall_avg, line_dash="dash", line_color=ACCENT_RED,
-        annotation_text=f"Overall Avg: {overall_avg:.1f}",
+    fig.add_vline(x=overall_avg, line_dash="dash",
+                  line_color=ACCENT_RED, line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>Overall Avg: {overall_avg:.1f}</b>",
+        x=overall_avg, xref="x", y=1.0, yref="paper",
+        xanchor="center", yanchor="bottom", showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
     )
-    style_fig(fig, "Q2: Average Score by Assessment Type (± Std Dev)")
+    style_fig(fig, "")
     fig.update_layout(
+        margin=dict(l=60, r=30, t=60, b=50),
         xaxis_title="Average Score", yaxis_title="Assessment Type",
-        xaxis_range=[0, 115], showlegend=False,
+        xaxis_range=[0, 110],
     )
     return fig
-
 
 # =====================================================
 # Q3 — Average Grade by Course
@@ -92,17 +110,25 @@ def chart_q3_course_grade(course_stats: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Bar(
         y=df["course_name"], x=df["mean"],
         orientation="h", marker_color=BLUE[2],
-        text=df["mean"].round(1),
-        textposition="outside",
+        text=[f"<b>{v:.1f}</b>" for v in df["mean"]],
+        textposition="inside",
+        insidetextanchor="end",
+        textfont=dict(color="white", size=13),
+        showlegend=False,
     ))
-    fig.add_vline(
-        x=overall_avg, line_dash="dash", line_color=ACCENT_RED,
-        annotation_text=f"Avg: {overall_avg:.1f}",
+    fig.add_vline(x=overall_avg, line_dash="dash", line_color=ACCENT_RED, line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>Avg: {overall_avg:.1f}</b>",
+        x=overall_avg, xref="x", y=1.02, yref="paper",
+        xanchor="center", yanchor="bottom", showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
     )
-    style_fig(fig, "Q3: Average Grade by Course")
+    style_fig(fig, "")
     fig.update_layout(
         yaxis_title="", xaxis_title="Average Grade",
-        xaxis_range=[0, 100], showlegend=False,
+        xaxis_range=[0, 100],
     )
     return fig
 
@@ -111,14 +137,9 @@ def chart_q3_course_grade(course_stats: pd.DataFrame) -> go.Figure:
 # Q3 deep-dive — Average Student Grade by Instructor
 # =====================================================
 def chart_instructor_grade(master: pd.DataFrame) -> go.Figure:
-    """Aggregate student avg_grade by instructor (from the master collection).
-
-    Mirrors the notebook's Q3 deep-dive chart. Sorted ascending so the
-    weakest instructor sits at the left.
-    """
     if master is None or master.empty or "instructor" not in master.columns:
         fig = go.Figure()
-        style_fig(fig, "Average Student Grade by Instructor")
+        style_fig(fig, "")
         fig.add_annotation(
             text="No instructor data available for the current selection.",
             xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
@@ -128,10 +149,8 @@ def chart_instructor_grade(master: pd.DataFrame) -> go.Figure:
 
     agg = (
         master.dropna(subset=["instructor", "avg_grade"])
-              .groupby("instructor")["avg_grade"]
-              .mean()
-              .reset_index()
-              .sort_values("avg_grade")
+              .groupby("instructor")["avg_grade"].mean()
+              .reset_index().sort_values("avg_grade")
     )
     overall_avg = agg["avg_grade"].mean()
 
@@ -139,23 +158,27 @@ def chart_instructor_grade(master: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Bar(
         x=agg["instructor"], y=agg["avg_grade"],
         marker_color=BLUE[2],
-        text=agg["avg_grade"].round(1),
-        textposition="outside",
-    ))
-    fig.add_hline(
-        y=overall_avg, line_dash="dash", line_color=ACCENT_RED,
-        annotation_text=f"Avg: {overall_avg:.1f}",
-    )
-    style_fig(fig, "Average Student Grade by Instructor")
-    fig.update_layout(
-        xaxis_title="Instructor",
-        yaxis_title="Average Grade",
-        yaxis_range=[0, 100],
+        text=[f"<b>{v:.1f}</b>" for v in agg["avg_grade"]],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=14),
         showlegend=False,
-        xaxis_tickangle=-25,
+    ))
+    fig.add_hline(y=overall_avg, line_dash="dash", line_color=ACCENT_RED, line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>Mean: {overall_avg:.1f}</b>",
+        x=1, xref="paper", y=overall_avg, yref="y",
+        xanchor="right", yanchor="bottom", showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
+    )
+    style_fig(fig, "")
+    fig.update_layout(
+        xaxis_title="Instructor", yaxis_title="Average Grade",
+        yaxis_range=[0, 100], xaxis_tickangle=-25,
     )
     return fig
-
 
 # =====================================================
 # Q4 — Avg Grade by Attendance Band
@@ -168,24 +191,33 @@ def chart_q4_attendance_band(master: pd.DataFrame) -> go.Figure:
                students=("student_id", "count"))
           .reset_index()
     )
+    avg = agg["avg_grade"].mean()
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
         x=agg["att_band"], y=agg["avg_grade"],
         marker_color=BLUE[2],
-        text=[f"{g:.1f}<br>n={n}"
-              for g, n in zip(agg["avg_grade"], agg["students"])],
-        textposition="outside",
-    ))
-    style_fig(fig, "Q4: Average Grade by Attendance Band")
-    fig.update_layout(
-        xaxis_title="Attendance Band",
-        yaxis_title="Average Grade",
-        yaxis_range=[0, agg["avg_grade"].max() * 1.2],
+        text=[f"<b>{g:.1f}</b>" for g in agg["avg_grade"]],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=14),
         showlegend=False,
+    ))
+    fig.add_hline(y=avg, line_dash="dash", line_color=ACCENT_RED, line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>Mean: {avg:.1f}</b>",
+        x=1, xref="paper", y=avg, yref="y",
+        xanchor="right", yanchor="bottom", showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
+    )
+    style_fig(fig, "")
+    fig.update_layout(
+        xaxis_title="Attendance Band", yaxis_title="Average Grade",
+        yaxis_range=[0, agg["avg_grade"].max() * 1.2],
     )
     return fig
-
 
 # =====================================================
 # Q5A — Avg Grade by Engagement Level
@@ -194,8 +226,7 @@ def chart_q5a_engagement_grade(master: pd.DataFrame) -> go.Figure:
     df = add_engagement_quartile(master)
     agg = (
         df.groupby("eng_quartile", observed=True)
-          .agg(avg_grade=("avg_grade", "mean"),
-               students=("student_id", "count"))
+          .agg(avg_grade=("avg_grade", "mean"))
           .reset_index()
     )
     overall_avg = agg["avg_grade"].mean()
@@ -204,21 +235,26 @@ def chart_q5a_engagement_grade(master: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Bar(
         x=agg["eng_quartile"], y=agg["avg_grade"],
         marker_color=BLUE[2],
-        text=[f"{g:.1f}<br>n={n}"
-              for g, n in zip(agg["avg_grade"], agg["students"])],
-        textposition="outside",
+        text=[f"<b>{v:.1f}</b>" for v in agg["avg_grade"]],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=14),
+        showlegend=False,
     ))
-    fig.add_hline(
-        y=overall_avg, line_dash="dash", line_color=ACCENT_RED,
-        annotation_text=f"Overall Average ({overall_avg:.1f})",
+    fig.add_hline(y=overall_avg, line_dash="dash", line_color=ACCENT_RED, line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>Overall Avg: {overall_avg:.1f}</b>",
+        x=1, xref="paper", y=overall_avg, yref="y",
+        xanchor="right", yanchor="bottom", showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
     )
-    style_fig(fig, "Q5A: Average Grade by Engagement Level")
+    style_fig(fig, "")
     fig.update_layout(
         xaxis_title="Engagement Level", yaxis_title="Average Grade",
-        showlegend=False,
     )
     return fig
-
 
 # =====================================================
 # Q5B — Avg Platform Activity by Engagement Level
@@ -227,8 +263,7 @@ def chart_q5b_engagement_activity(master: pd.DataFrame) -> go.Figure:
     df = add_engagement_quartile(master)
     agg = (
         df.groupby("eng_quartile", observed=True)
-          .agg(avg_events=("total_events", "mean"),
-               students=("student_id", "count"))
+          .agg(avg_events=("total_events", "mean"))
           .reset_index()
     )
 
@@ -236,18 +271,18 @@ def chart_q5b_engagement_activity(master: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Bar(
         x=agg["eng_quartile"], y=agg["avg_events"],
         marker_color=BLUE[4],
-        text=[f"{e:.0f} events<br>n={n}"
-              for e, n in zip(agg["avg_events"], agg["students"])],
-        textposition="outside",
+        text=[f"<b>{v:.0f}</b>" for v in agg["avg_events"]],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=14),
+        showlegend=False,
     ))
-    style_fig(fig, "Q5B: Average Platform Activity by Engagement Level")
+    style_fig(fig, "")
     fig.update_layout(
         xaxis_title="Engagement Level",
-        yaxis_title="Average Platform Engagement",
-        showlegend=False,
+        yaxis_title="Average Platform Events",
     )
     return fig
-
 
 # =====================================================
 # Q6 — Top 10 Concepts by Failure Rate
@@ -334,62 +369,53 @@ def _age_band_aggregate(master: pd.DataFrame) -> pd.DataFrame:
     return agg.sort_values("age_band")
 
 
-def chart_q10_age_grade(master: pd.DataFrame) -> go.Figure:
-    agg = _age_band_aggregate(master)
-    avg = agg["avg_grade"].mean()
+def _q10_panel(agg, value_col, ylabel, color, fmt, ymax):
+    avg = agg[value_col].mean()
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=agg["age_band"].astype(str), y=agg["avg_grade"],
-        marker_color=BLUE[1],
-        text=agg["avg_grade"].round(1),
-        textposition="outside",
+        x=agg["age_band"].astype(str), y=agg[value_col],
+        marker_color=color,
+        text=[f"<b>{fmt(v)}</b>" for v in agg[value_col]],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=14),
+        showlegend=False,
     ))
-    fig.add_hline(y=avg, line_dash="dash", line_color=ACCENT_RED,
-                  annotation_text=f"Mean: {avg:.1f}")
-    style_fig(fig, "Average Grade by Age Band")
-    fig.update_layout(xaxis_title="", yaxis_title="Avg Grade",
-                      yaxis_range=[0, max(100, agg["avg_grade"].max() * 1.15)],
-                      showlegend=False)
+    fig.add_hline(y=avg, line_dash="dash", line_color=ACCENT_RED, line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>Mean: {fmt(avg)}</b>",
+        x=1, xref="paper", y=avg, yref="y",
+        xanchor="right", yanchor="bottom",
+        showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
+    )
+    style_fig(fig, "")
+    fig.update_layout(
+        xaxis_title="", yaxis_title=ylabel, yaxis_range=[0, ymax],
+    )
     return fig
+
+
+def chart_q10_age_grade(master: pd.DataFrame) -> go.Figure:
+    agg = _age_band_aggregate(master)
+    return _q10_panel(agg, "avg_grade", "Avg Grade",
+                      BLUE[1], lambda v: f"{v:.1f}",
+                      max(100, agg["avg_grade"].max() * 1.15))
 
 
 def chart_q10_age_attendance(master: pd.DataFrame) -> go.Figure:
     agg = _age_band_aggregate(master)
-    avg = agg["attendance"].mean()
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=agg["age_band"].astype(str), y=agg["attendance"],
-        marker_color=BLUE[3],
-        text=agg["attendance"].round(1).astype(str) + "%",
-        textposition="outside",
-    ))
-    fig.add_hline(y=avg, line_dash="dash", line_color=ACCENT_RED,
-                  annotation_text=f"Mean: {avg:.1f}%")
-    style_fig(fig, "Attendance by Age Band")
-    fig.update_layout(xaxis_title="", yaxis_title="Attendance %",
-                      yaxis_range=[0, 100], showlegend=False)
-    return fig
+    return _q10_panel(agg, "attendance", "Attendance %",
+                      BLUE[3], lambda v: f"{v:.1f}%", 100)
 
 
 def chart_q10_age_engagement(master: pd.DataFrame) -> go.Figure:
     agg = _age_band_aggregate(master)
-    avg = agg["engagement"].mean()
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=agg["age_band"].astype(str), y=agg["engagement"],
-        marker_color=BLUE[4],
-        text=agg["engagement"].round(0),
-        textposition="outside",
-    ))
-    fig.add_hline(y=avg, line_dash="dash", line_color=ACCENT_RED,
-                  annotation_text=f"Mean: {avg:.0f}")
-    style_fig(fig, "Engagement by Age Band")
-    fig.update_layout(xaxis_title="", yaxis_title="Avg Events",
-                      yaxis_range=[0, agg["engagement"].max() * 1.2],
-                      showlegend=False)
-    return fig
-
-
+    return _q10_panel(agg, "engagement", "Avg Events",
+                      BLUE[4], lambda v: f"{v:.0f}",
+                      agg["engagement"].max() * 1.2)
 # =====================================================
 # Overview — Student Risk Distribution donut
 # =====================================================
@@ -424,16 +450,10 @@ def chart_risk_donut(pct_at_risk: float) -> go.Figure:
 # =====================================================
 def chart_hossam_pie(master: pd.DataFrame,
                      instructor_name: str = "Eng. Hossam Refaat") -> go.Figure:
-    """Average grade per course for a single instructor.
-
-    Shows the same data the notebook's Q3 deep-dive surfaces, but as a
-    horizontal bar so the grade contrast — not the student split — is
-    the visible story. (Function name kept for compatibility with the
-    Performance page imports.)
-    """
+    """Average grade per course for a single instructor, with a clear takeaway."""
     fig = go.Figure()
     if master is None or master.empty or "instructor" not in master.columns:
-        style_fig(fig, f"{instructor_name} — Grade by Course")
+        style_fig(fig, "")
         fig.add_annotation(text="No instructor data available.",
                            xref="paper", yref="paper", x=0.5, y=0.5,
                            showarrow=False, font=dict(color="#64748B"))
@@ -441,7 +461,7 @@ def chart_hossam_pie(master: pd.DataFrame,
 
     sub = master[master["instructor"] == instructor_name]
     if sub.empty or "course_name" not in sub.columns:
-        style_fig(fig, f"{instructor_name} — Grade by Course")
+        style_fig(fig, "")
         fig.add_annotation(text=f"No students under {instructor_name}.",
                            xref="paper", yref="paper", x=0.5, y=0.5,
                            showarrow=False, font=dict(color="#64748B"))
@@ -455,38 +475,38 @@ def chart_hossam_pie(master: pd.DataFrame,
            .sort_values("avg_grade", ascending=True)
     )
     platform_avg = float(sub["avg_grade"].mean())
-
-    # Red bar for the underperforming course, navy for the rest
-    colors = [
-        ACCENT_RED if g < 65 else BLUE[1]
-        for g in agg["avg_grade"]
-    ]
+    colors = [ACCENT_RED if g < 65 else BLUE[1] for g in agg["avg_grade"]]
 
     fig.add_trace(go.Bar(
-        y=agg["course_name"],
-        x=agg["avg_grade"],
-        orientation="h",
-        marker_color=colors,
-        text=[f"<b>{g:.1f}</b>  ·  {n} students"
-              for g, n in zip(agg["avg_grade"], agg["students"])],
-        textposition="outside",
-        textfont=dict(size=13),
+        y=agg["course_name"], x=agg["avg_grade"],
+        orientation="h", marker_color=colors,
+        text=[f"<b>{g:.1f}</b>" for g in agg["avg_grade"]],
+        textposition="inside",
+        insidetextanchor="end",
+        textfont=dict(color="white", size=16),
+        showlegend=False,
     ))
-    fig.add_vline(
-        x=platform_avg, line_dash="dash", line_color="#64748B",
-        annotation_text=f"His overall avg: {platform_avg:.1f}",
-        annotation_position="top right",
+    fig.add_vline(x=platform_avg, line_dash="dash",
+                  line_color="#64748B", line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>His overall avg: {platform_avg:.1f}</b>",
+        x=platform_avg, xref="x", y=1.05, yref="paper",
+        xanchor="center", yanchor="bottom", showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor="#64748B", borderwidth=1, borderpad=4,
+        font=dict(size=11, color="#475569"),
     )
-    style_fig(fig, f"{instructor_name} — Avg Grade by Course")
+
+    
+
+    style_fig(fig, "")
     fig.update_layout(
         xaxis_title="Average Grade",
         yaxis_title="",
         xaxis_range=[0, 100],
-        showlegend=False,
-        margin=dict(l=20, r=80, t=60, b=40),
+        margin=dict(l=20, r=40, t=60, b=100),
     )
     return fig
-
 # =====================================================
 # Concepts deep-dive — Recursion Performance Across Python Groups
 # =====================================================
@@ -593,7 +613,6 @@ def chart_q7_concept_timeline(timeline: pd.DataFrame, concept_name: str) -> go.F
 # Q8 — On-Time vs Late Submissions
 # =====================================================
 def chart_q8_late_vs_ontime(late_impact: pd.DataFrame) -> go.Figure:
-    # `late_impact` has columns: is_late, avg_score, n_submissions, label
     on_row = late_impact[late_impact["label"] == "On Time"].iloc[0]
     late_row = late_impact[late_impact["label"] == "Late"].iloc[0]
     on_time_score = float(on_row["avg_score"])
@@ -604,16 +623,20 @@ def chart_q8_late_vs_ontime(late_impact: pd.DataFrame) -> go.Figure:
     fig.add_trace(go.Bar(
         x=["On Time"], y=[on_time_score],
         name="On Time", marker_color=BLUE[1],
-        text=[f"{on_time_score:.1f}<br>n={int(on_row['n_submissions'])}"],
-        textposition="outside",
+        text=[f"<b>{on_time_score:.1f}</b>"],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=16),
     ))
     fig.add_trace(go.Bar(
         x=["Late"], y=[late_score],
         name="Late", marker_color=BLUE[4],
-        text=[f"{late_score:.1f}<br>n={int(late_row['n_submissions'])}"],
-        textposition="outside",
+        text=[f"<b>{late_score:.1f}</b>"],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=16),
     ))
-    style_fig(fig, "Q8: Students Who Submit On Time Achieve Higher Scores")
+    style_fig(fig, "")
     fig.update_layout(
         showlegend=True,
         legend_title_text="Submission Status",
@@ -621,37 +644,49 @@ def chart_q8_late_vs_ontime(late_impact: pd.DataFrame) -> go.Figure:
         xaxis_title="", yaxis_title="Average Score",
         yaxis_range=[0, max(on_time_score, late_score) * 1.25],
         annotations=[dict(
-            text=f"On-time submissions score {gap:.1f} points higher on average",
-            x=0.5, y=1.08, xref="paper", yref="paper", showarrow=False,
+            text=f"<b>On-time submissions score {gap:.1f} points higher on average</b>",
+            x=0.5, y=1.05, xref="paper", yref="paper", showarrow=False,
+            font=dict(size=12),
         )],
     )
     return fig
-
 # =====================================================
 # Q9 — Attendance Trend Over Time (bar)
 # =====================================================
 def chart_q9_attendance_trend(monthly: pd.DataFrame) -> go.Figure:
     df = monthly.copy()
     df["month"] = _month_label(df["month"])
-    df = df.sort_values("month")
+    df = df.sort_values("month").reset_index(drop=True)
+    month_order = df["month"].tolist()
     avg = df["attendance_rate"].mean()
 
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        x=df["month"], y=df["attendance_rate"],
+        x=month_order, y=df["attendance_rate"].tolist(),
         marker_color=BLUE[3],
-        text=df["attendance_rate"].round(1).astype(str) + "%",
-        textposition="outside", name="Attendance",
+        text=[f"<b>{v:.1f}%</b>" for v in df["attendance_rate"]],
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(color="white", size=14),
+        name="Attendance",
+        showlegend=False,
     ))
-    fig.add_hline(
-        y=avg, line_dash="dash", line_color=ACCENT_RED,
-        annotation_text=f"Average ({avg:.1f}%)",
+    fig.add_hline(y=avg, line_dash="dash",
+                  line_color=ACCENT_RED, line_width=2.5)
+    fig.add_annotation(
+        text=f"<b>Mean: {avg:.1f}%</b>",
+        x=1, xref="paper", y=avg, yref="y",
+        xanchor="right", yanchor="bottom", showarrow=False,
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor=ACCENT_RED, borderwidth=1, borderpad=4,
+        font=dict(size=11, color=ACCENT_RED),
     )
     fig.update_layout(
-        title="Attendance Trend Over Time",
-        xaxis=dict(type="category"),
+        title=dict(text=""),
+        xaxis=dict(type="category", categoryorder="array",
+                   categoryarray=month_order),
         xaxis_title="Month", yaxis_title="Attendance Rate (%)",
-        yaxis_range=[0, 100], showlegend=False, height=450,
+        yaxis_range=[0, 100], height=450,
         plot_bgcolor="#fafbfd", paper_bgcolor="white",
         font=dict(family="Segoe UI", size=12, color="#333"),
     )
@@ -954,27 +989,53 @@ def chart_q14_course_concentration(at_risk_df: pd.DataFrame) -> go.Figure:
 # Q15 — Group Performance Trend (slopes)
 # =====================================================
 def chart_q15_grade_trends(trends: pd.DataFrame) -> go.Figure:
-    df = trends[trends["Group"] != "G10"].sort_values("Slope")
+    df = trends[trends["Group"] != "G10"].sort_values("Slope").reset_index(drop=True)
+
+    point_colors = [
+        "#d62728" if s <= -0.35 else
+        "#2ca02c" if s > 0 else
+        "#94a3b8"
+        for s in df["Slope"]
+    ]
 
     fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=df["Slope"], y=df["Group"], orientation="h",
-        text=df["Slope"].round(2), textposition="outside",
-        marker_color=[
-            "#d62728" if x <= -0.35
-            else "#2ca02c" if x > 0
-            else "#9e9e9e"
-            for x in df["Slope"]
-        ],
+    fig.add_trace(go.Scatter(
+        x=df["Group"], y=df["Slope"],
+        mode="lines+markers+text",
+        line=dict(color=BLUE[3], width=3, shape="spline"),
+        marker=dict(size=18, color=point_colors,
+                    line=dict(color="white", width=2.5)),
+        text=[f"<b>{s:+.2f}</b>" for s in df["Slope"]],
+        textposition="top center",
+        textfont=dict(size=11),
+        hovertemplate="<b>%{x}</b><br>Slope: %{y:+.2f} pts/month<extra></extra>",
+        showlegend=False,
     ))
-    fig.add_vline(x=0, line_dash="dash", line_color="black")
+    fig.add_hline(y=0, line_dash="dash", line_color="#0F172A", line_width=2)
+
+    # color legend via dummy traces
+    fig.add_trace(go.Scatter(x=[None], y=[None], mode="markers",
+        marker=dict(size=14, color="#d62728"),
+        name="Sharp decline (≤ -0.35)"))
+    fig.add_trace(go.Scatter(x=[None], y=[None], mode="markers",
+        marker=dict(size=14, color="#94a3b8"),
+        name="Mild decline"))
+    fig.add_trace(go.Scatter(x=[None], y=[None], mode="markers",
+        marker=dict(size=14, color="#2ca02c"),
+        name="Improving (> 0)"))
+
     fig.update_layout(
-        title="Q15: Group Performance Trend (Excluding Outlier G10)",
-        xaxis_title="Monthly Grade Change (Points per Month)",
-        yaxis_title="Group",
-        showlegend=False, height=500,
-        plot_bgcolor="#fafbfd", paper_bgcolor="white",
+        title=dict(text=""),
+        xaxis_title="Group (sorted by trajectory — worst to best)",
+        yaxis_title="Monthly Grade Change (Points per Month)",
+        height=500,
+        plot_bgcolor="#fafbfd",
+        paper_bgcolor="white",
         font=dict(family="Segoe UI", size=12, color="#333"),
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.25,
+                    xanchor="center", x=0.5),
+        margin=dict(l=60, r=30, t=30, b=80),
     )
     fig.update_xaxes(gridcolor="#e8e8e8")
     fig.update_yaxes(gridcolor="#e8e8e8")
